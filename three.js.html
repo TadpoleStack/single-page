@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>three.js</title>
+    <script src="https://cdn.bootcdn.net/ajax/libs/three.js/r122/three.min.js"></script>
+    <!-- <script src="./node_modules/three/build/three.min.js"></script> -->
+    <style>
+        *{
+            margin: 0;
+            padding: 0;
+        }
+        html,body{
+            height: 100%;
+        }
+    </style>
+</head>
+<body>
+    
+</body>
+</html>
+<script>
+console.info(THREE)
+
+//创建场景
+const scene = new THREE.Scene;
+//创建相机
+//PerspectiveCamera  视野角度FOV   长宽比  近截面  远截面
+const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000 );
+//创建渲染器
+const renderer = new THREE.WebGLRenderer();
+//设置渲染器的宽高
+renderer.setSize( window.innerWidth, window.innerHeight );
+//将渲染器放到页面上
+document.body.appendChild(renderer.domElement);
+//立方体对象
+const geometry = new THREE.BoxGeometry();
+//材质
+const material = new THREE.MeshBasicMaterial({color:'#ff0000'});
+//网格
+const cube = new THREE.Mesh(geometry,material);
+//添加到场景
+scene.add(cube);
+//下移镜头
+camera.position.z = 5;
+//立方体旋转
+const animate = function(){
+    requestAnimationFrame(animate);
+    cube.rotation.x += 0.005
+    cube.rotation.y += 0.005
+    cube.rotation.z += 0.005
+    renderer.render(scene,camera)
+}
+animate();
+</script>

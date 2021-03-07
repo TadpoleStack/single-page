@@ -1,0 +1,94 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>canvas画质控报告</title>
+    <style>
+      * {
+        padding: 0;
+        margin: 0;
+      }
+      html,
+      body,
+      #app {
+        width: 100%;
+        height: 100%;
+      }
+      #canvas {
+        margin: 100px;
+        width: 100px;
+        height: 100px;
+      }
+    </style>
+    <link
+      rel="stylesheet"
+      href="https://unpkg.com/element-plus/lib/theme-chalk/index.css"
+    />
+    <script src="https://cdn.bootcdn.net/ajax/libs/vue/3.0.2/vue.global.js"></script>
+    <script src="https://cdn.bootcdn.net/ajax/libs/vuex/4.0.0-rc.1/vuex.global.js"></script>
+    <script src="https://unpkg.com/element-plus/lib/index.full.js"></script>
+  </head>
+  <body>
+    <div id="app"></div>
+  </body>
+</html>
+<script id="template" type="x-template">
+  <canvas id="canvas" style="border:1px solid rgba(0,0,0,0.15);"></canvas>
+</script>
+<script>
+  const {
+    createApp,
+    defineComponent,
+    reactive,
+    toRefs,
+    onMounted,
+    computed,
+  } = Vue;
+  const App = defineComponent({
+    name: "App",
+    template: "#template",
+    setup() {
+      const state = reactive({});
+      const canvasStart = (config) => {
+        //获取DOM对象属性
+        const getStyle = (obj, att) =>
+          obj.currentStyle
+            ? obj.currentStyle[att]
+            : window.getComputedStyle(obj, false)[att];
+        let canvas = document.querySelector(config.selector);
+        let width = 0;
+        let height = 0;
+        let gl = canvas.getContext("webgl");
+        //初始化
+        const init = () => {
+          width = Number(getStyle(canvas, "width").replace("px", ""));
+          height = Number(getStyle(canvas, "height").replace("px", ""));
+          canvas.width = width;
+          canvas.height = height;
+        };
+        const startPerform = () => {
+          gl.clearColor(0.0, 0.0, 0.0, 0);
+          gl.clear(gl.COLOR_BUFFER_BIT);
+          console.info(gl)
+        };
+        init();
+        startPerform();
+        return {
+          gl,
+        };
+      };
+      onMounted(() => {
+        const { ctx } = canvasStart({
+          selector: "#canvas",
+        });
+      });
+      return {
+        ...toRefs(state),
+      };
+    },
+  });
+  const app = createApp(App);
+  app.use(ElementPlus).mount("#app");
+</script>

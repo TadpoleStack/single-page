@@ -1,0 +1,91 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="referrer" content="no-referrer" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Vue单页面</title>
+    <link rel="stylesheet" href="https://unpkg.com/element-plus/lib/theme-chalk/index.css">
+    <script src="https://cdn.bootcdn.net/ajax/libs/vue/3.0.2/vue.global.js"></script>
+    <script src="https://cdn.bootcdn.net/ajax/libs/vuex/4.0.0-rc.1/vuex.global.js"></script>
+    <script src="https://unpkg.com/element-plus/lib/index.full.js"></script>
+    <script src="https://cdn.bootcdn.net/ajax/libs/mathjs/8.1.0/math.min.js"></script>
+</head>
+<body>
+    <div id="app"></div>
+</body>
+</html>
+<script id="template" type="x-template">
+    <div>
+        <div v-for="(item,index) in listImg" :key="index">
+            <p>id：{{item.id}}</p>
+            <p>time：{{item.time}}</p>
+            <p>img：{{item.img}}</p>
+            <!-- <img :src="item.img" alt=""> -->
+        </div>
+    </div>
+</script>
+<script>
+    const { createApp, defineComponent, reactive, toRefs, onMounted } = Vue;
+    const App = defineComponent({
+        name:'App',
+        template:"#template",
+        setup(){
+            const state = reactive({
+                listImg:[]
+            })
+            const setCount = () =>{
+                state.count = state.count>=10?0:state.count+1
+            }
+            const $_ajax = config=>{
+                const formatParams = data=>{
+                    let arr=[];
+                    for(let name in data) arr.push(encodeURIComponent(name)+"="+encodeURIComponent(data[name]));
+                    return arr.join("&");
+                }
+                const xhr = new XMLHttpRequest()
+                xhr.open(config.method,config.url+'?'+formatParams(config.params),true)
+                if(config.body)xhr.setRequestHeader("Content-type","application/json;charset=UTF-8");
+                else xhr.setRequestHeader("Content-type","application/x-www-form-urlencoded");
+                xhr.setRequestHeader("Authorization",config.token);
+                xhr.onreadystatechange = ()=>{
+                    if (xhr.readyState===4 && xhr.status===200){
+                        config.success(xhr.responseText);
+                    }
+                }
+                
+                xhr.send(JSON.stringify(config.body))
+            }
+            const start = ()=>{
+                //https://api.apiopen.top/getWangYiNews
+                //https://api.apiopen.top/getImages
+                //https://api.apiopen.top/getJoke
+                //https://api.apiopen.top/getSingleJoke
+                $_ajax({
+                    url:'https://api.apiopen.top/getImages',
+                    method:'post',
+                    params:{},
+                    body:{file:1,list:[{name:1,sex:1},{name:1,sex:1}]},
+                    token:'123',
+                    success:function(res){
+                        console.info('res',JSON.parse(res))
+                        state.listImg = JSON.parse(res).result
+                    }
+                })
+            }
+            onMounted(()=>{
+                start()
+            })
+            return {
+                ...toRefs(state),
+                setCount
+            }
+        },
+        // render(){
+        //     return ``
+        // }
+    })
+    const app = createApp(App)
+    app.use(ElementPlus).mount("#app")
+</script>

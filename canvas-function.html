@@ -1,0 +1,351 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>function</title>
+    <style>
+      * {
+        padding: 0;
+        margin: 0;
+      }
+      html,
+      body,
+      #app {
+        width: 100%;
+        height: 100%;
+      }
+      #box {
+        margin: 100px;
+        width: 36%;
+        height: 40%;
+      }
+    </style>
+    <link
+      rel="stylesheet"
+      href="https://unpkg.com/element-plus/lib/theme-chalk/index.css"
+    />
+    <script src="https://cdn.bootcdn.net/ajax/libs/vue/3.0.2/vue.global.js"></script>
+    <script src="https://cdn.bootcdn.net/ajax/libs/vuex/4.0.0-rc.1/vuex.global.js"></script>
+    <script src="https://unpkg.com/element-plus/lib/index.full.js"></script>
+  </head>
+  <body>
+    <div id="app"></div>
+  </body>
+</html>
+<script id="template" type="x-template">
+  <div id="box"></div>
+</script>
+<script>
+  const {
+    createApp,
+    defineComponent,
+    reactive,
+    toRefs,
+    onMounted,
+    computed,
+  } = Vue;
+  const App = defineComponent({
+    name: "App",
+    template: "#template",
+    setup() {
+      const state = reactive({});
+      const canvasStart = (config) => {
+        //获取DOM对象属性
+        const getStyle = (obj, att) =>
+          obj.currentStyle
+            ? obj.currentStyle[att]
+            : window.getComputedStyle(obj, false)[att];
+        let box = document.querySelector(config.selector);
+        let canvas = document.createElement("canvas");
+        box.appendChild(canvas);
+        let minX = 0;
+        let minY = 0;
+        let maxX = 0;
+        let maxY = 0;
+        let grid = 25;
+        let cellX = 1;
+        let cellY = 1;
+        let scaleX = [];
+        let scaleY = [];
+        let width = 0;
+        let height = 0;
+        let ctx = canvas.getContext("2d");
+        let lineList = [];
+        let originData = [];
+        let axisX = 0;
+        let axisY = 0;
+        //初始化
+        const init = () => {
+          width = Number(getStyle(box, "width").replace("px", ""));
+          height = Number(getStyle(box, "height").replace("px", ""));
+          canvas.width = width;
+          canvas.height = height;
+          lineList = JSON.parse(JSON.stringify(config.data));
+          originData = config.data;
+          minX = 0;
+          minY = 0;
+          maxX = 0;
+          maxY = 0;
+        };
+        //计算
+        const computed = () => {
+          //计算最大最小 (X,Y)
+          for (
+            let i = 0, lineListLen = originData.length;
+            i < lineListLen;
+            i++
+          ) {
+            let lineItem = originData[i];
+            for (
+              let k = 0, lineItemLen = lineItem.length;
+              k < lineItemLen;
+              k++
+            ) {
+              if (lineItem[k][0] > maxX) maxX = lineItem[k][0];
+              if (lineItem[k][1] > maxY) maxY = lineItem[k][1];
+              if (lineItem[k][0] < minX) minX = lineItem[k][0];
+              if (lineItem[k][1] < minY) minY = lineItem[k][1];
+            }
+          }
+          cellX = (width - 2 * grid) / (maxX - minX);
+          cellY = (height - 2 * grid) / (maxY - minY);
+          //位移
+          if (minX < 0 || minY < 0) {
+            for (
+              let i = 0, lineListLen = lineList.length;
+              i < lineListLen;
+              i++
+            ) {
+              let lineItem = lineList[i];
+              for (
+                let k = 0, lineItemLen = lineItem.length;
+                k < lineItemLen;
+                k++
+              ) {
+                if (minX < 0) lineItem[k][0] = lineItem[k][0] - minX;
+                if (minY < 0) lineItem[k][1] = lineItem[k][1] - minY;
+              }
+            }
+          }
+          //坐标轴
+          axisX = minX < 0 ? -minX : 0;
+          axisY = minY < 0 ? -minY : 0;
+
+          scaleX = [];
+          scaleY = [];
+          //计算刻度
+          for (
+            let i = Math.floor(minX), ceilMaxX = Math.ceil(maxX);
+            i <= ceilMaxX;
+            i++
+          ) {
+            if (i >= minX && i <= maxX) scaleX.push(i);
+          }
+          for (
+            let i = Math.floor(minY), ceilMaxY = Math.ceil(maxY);
+            i <= ceilMaxY;
+            i++
+          ) {
+            if (i >= minY && i <= maxY) scaleY.push(i);
+          }
+          if (config.axis && config.axis.x) scaleX = config.axis.x;
+          if (config.axis && config.axis.y) scaleY = config.axis.y;
+        };
+        //画坐标轴
+        const drawAxis = () => {
+          //X
+          ctx.beginPath();
+          ctx.strokeStyle = "rgb(51,51,51)";
+          ctx.moveTo(0 + grid, height - axisY * cellY - grid);
+          ctx.lineTo(width - grid, height - axisY * cellY - grid);
+          //箭头
+          ctx.moveTo(width - grid - 4, height - axisY * cellY - grid - 4);
+          ctx.lineTo(width - grid, height - axisY * cellY - grid);
+          ctx.moveTo(width - grid - 4, height - axisY * cellY - grid + 4);
+          ctx.lineTo(width - grid, height - axisY * cellY - grid);
+          //Y
+          ctx.moveTo(axisX * cellX + grid, 0 + grid);
+          ctx.lineTo(axisX * cellX + grid, height - grid);
+          //箭头
+          ctx.moveTo(axisX * cellX + grid - 4, 4 + grid);
+          ctx.lineTo(axisX * cellX + grid, 0 + grid);
+          ctx.moveTo(axisX * cellX + grid + 4, 4 + grid);
+          ctx.lineTo(axisX * cellX + grid, 0 + grid);
+          ctx.stroke();
+        };
+        //画刻度
+        const drawScale = () => {
+          ctx.beginPath();
+          ctx.strokeStyle = "rgb(51,51,51)";
+          ctx.fillStyle = "rgb(51,51,51)";
+          if (config.axis && config.axis.x) {
+            for (let i = 0, len = scaleX.length; i < len; i++) {
+              ctx.moveTo(
+                (axisX + scaleX[i]) * cellX + grid,
+                height - axisY * cellY - grid
+              );
+              ctx.lineTo(
+                (axisX + scaleX[i]) * cellX + grid,
+                height - axisY * cellY - grid + 6
+              );
+              ctx.textBaseline = "middle";
+              ctx.textAlign = "center";
+              ctx.fillText(
+                scaleX[i],
+                (axisX + scaleX[i]) * cellX + grid,
+                height - grid + 12
+              );
+            }
+          } else {
+            for (let i = 0, len = scaleX.length; i < len; i++) {
+              ctx.moveTo(
+                scaleX[i] * cellX + grid,
+                height - axisY * cellY - grid
+              );
+              ctx.lineTo(
+                scaleX[i] * cellX + grid,
+                height - axisY * cellY - grid + 6
+              );
+              ctx.textBaseline = "middle";
+              ctx.textAlign = "center";
+              ctx.fillText(scaleX[i], cellX * i + grid, height - grid + 12);
+            }
+          }
+
+          if (config.axis && config.axis.y) {
+            for (let i = 0, len = scaleY.length; i < len; i++) {
+              ctx.moveTo(
+                axisX * cellX + grid,
+                height - grid - cellY * (scaleY[i] + axisY)
+              );
+              ctx.lineTo(
+                axisX * cellX + grid - 6,
+                height - grid - cellY * (scaleY[i] + axisY)
+              );
+              ctx.fillText(
+                scaleY[i],
+                axisX * cellX + grid - 15,
+                height - grid - cellY * (scaleY[i] + axisY)
+              );
+            }
+          } else {
+            for (let i = 0, len = scaleY.length; i < len; i++) {
+              ctx.moveTo(axisX * cellX + grid, height - grid - cellY * i);
+              ctx.lineTo(axisX * cellX + grid - 6, height - grid - cellY * i);
+              ctx.fillText(
+                scaleY[i],
+                axisX * cellX + grid - 15,
+                height - grid - cellY * i
+              );
+            }
+          }
+          ctx.stroke();
+        };
+        //画线
+        const drawLine = () => {
+          for (let i = 0, lineListLen = lineList.length; i < lineListLen; i++) {
+            let lineItem = lineList[i];
+            ctx.beginPath();
+            ctx.strokeStyle = "rgb(187,206,225)";
+            ctx.lineWidth = 1;
+            for (
+              let k = 0, lineItemLen = lineItem.length;
+              k < lineItemLen;
+              k++
+            ) {
+              let pointerItem = lineItem[k];
+              if (k === 0) {
+                ctx.moveTo(
+                  pointerItem[0] * cellX + grid,
+                  height - pointerItem[1] * cellY - grid
+                );
+              } else {
+                ctx.lineTo(
+                  pointerItem[0] * cellX + grid,
+                  height - pointerItem[1] * cellY - grid
+                );
+              }
+            }
+            ctx.stroke();
+          }
+        };
+        init();
+        computed();
+        drawAxis();
+        drawScale();
+        drawLine();
+        canvas.addEventListener("mousemove", (e) => {
+          let X = e.clientX - canvas.offsetLeft;
+          let Y = e.clientY - canvas.offsetTop;
+          ctx.clearRect(0, 0, width, height);
+          ctx.setLineDash([]);
+          ctx.lineWidth = 1;
+          drawAxis();
+          drawScale();
+          drawLine();
+          ctx.beginPath();
+          ctx.strokeStyle = "rgb(0,0,0)";
+          ctx.setLineDash([1]);
+          ctx.lineWidth = 0.5;
+          ctx.moveTo(0, Y - 0.5);
+          ctx.lineTo(width - 0.5, Y - 0.5);
+          ctx.moveTo(X - 0.5, 0);
+          ctx.lineTo(X - 0.5, height - 0.5);
+          ctx.stroke();
+        });
+        canvas.addEventListener("mouseout", (e) => {
+          ctx.clearRect(0, 0, width, height);
+          ctx.setLineDash([]);
+          ctx.lineWidth = 1;
+          drawAxis();
+          drawScale();
+          drawLine();
+        });
+        return {
+          resize: function () {
+            ctx.clearRect(0, 0, width, height);
+            init();
+            computed();
+            drawAxis();
+            drawScale();
+            drawLine();
+          },
+          update: function (updateConfig) {
+            config = Object.assign(config, updateConfig);
+            ctx.clearRect(0, 0, width, height);
+            init();
+            computed();
+            drawAxis();
+            drawScale();
+            drawLine();
+          },
+          ctx: ctx,
+        };
+      };
+      onMounted(() => {
+        let data = [[]];
+        let fun = (x, a, b, c) => {
+          return x * x * x - 800;
+        };
+        for (let i = -10; i <= 10; i += 0.1) {
+          data[0].push([i, Math.sin(i)]);
+        }
+        const { resize, update, ctx } = canvasStart({
+          selector: "#box",
+          data: data,
+          axis: {
+            x: [-50, -40, -30, -20, -10, 0, 10, 20, 30, 40, 50],
+            y: [0],
+          },
+        });
+      });
+      return {
+        ...toRefs(state),
+      };
+    },
+  });
+  const app = createApp(App);
+  app.use(ElementPlus).mount("#app");
+</script>

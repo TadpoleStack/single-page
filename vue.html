@@ -1,0 +1,73 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Vue单页面</title>
+    <link rel="stylesheet" href="https://unpkg.com/element-plus/lib/theme-chalk/index.css">
+    <script src="https://cdn.bootcdn.net/ajax/libs/vue/3.0.2/vue.global.js"></script>
+    <script src="https://cdn.bootcdn.net/ajax/libs/vuex/4.0.0-rc.1/vuex.global.js"></script>
+    <script src="https://unpkg.com/element-plus/lib/index.full.js"></script>
+    <script src="https://cdn.bootcdn.net/ajax/libs/mathjs/8.1.0/math.min.js"></script>
+</head>
+<body>
+    <div id="app"></div>
+</body>
+</html>
+<script id="template" type="x-template">
+    <div>
+        <div>name:{{name}}</div>
+        <div>sex:{{sex==1?'男':'女'}}</div>
+        <el-button @click="setCount">{{count}}</el-button>
+    </div>
+</script>
+<script>
+    const { createApp, defineComponent, reactive, toRefs, onMounted } = Vue;
+    const App = defineComponent({
+        name:'App',
+        template:"#template",
+        // template:`
+        // <div>
+        //     <div>name:{{name}}</div>
+        //     <div>sex:{{sex==1?'男':'女'}}</div>
+        // </div>
+        // `,
+        setup(){
+            const state = reactive({
+                name: "MrChen",
+                sex: 1,
+                count: 0
+            })
+            const setCount = () =>{
+                state.count = state.count>=10?0:state.count+1
+            }
+            const mathjsDemo = () =>{
+                //0.1＋0.2
+                let add = math.format(math.chain(math.bignumber(0.1)).add(math.bignumber(0.2)).done());
+                //0.2-0.1
+                let subtract = math.format(math.chain(math.bignumber(0.2)).subtract(math.bignumber(0.1)).done());
+                //0.1*0.2
+                let multiply = math.format(math.chain(math.bignumber(0.1)).multiply(math.bignumber(0.2)).done());
+                //0.1/0.2
+                let divide = math.format(math.chain(math.bignumber(0.1)).divide(math.bignumber(0.2)).done());
+                console.info('add',add)
+                console.info('subtract',subtract)
+                console.info('multiply',multiply)
+                console.info('divide',divide)
+            }
+            onMounted(()=>{
+                mathjsDemo()
+            })
+            return {
+                ...toRefs(state),
+                setCount
+            }
+        },
+        // render(){
+        //     return ``
+        // }
+    })
+    const app = createApp(App)
+    app.use(ElementPlus).mount("#app")
+</script>

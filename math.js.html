@@ -1,0 +1,154 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>math.js处理js存储精度问题</title>
+    <link rel="stylesheet" href="https://unpkg.com/element-plus/lib/theme-chalk/index.css">
+    <script src="https://cdn.bootcdn.net/ajax/libs/vue/3.0.2/vue.global.js"></script>
+    <script src="https://cdn.bootcdn.net/ajax/libs/vuex/4.0.0-rc.1/vuex.global.js"></script>
+    <script src="https://unpkg.com/element-plus/lib/index.full.js"></script>
+    <script src="https://cdn.bootcdn.net/ajax/libs/mathjs/8.1.0/math.min.js"></script>
+</head>
+<body>
+    <div id="app"></div>
+</body>
+</html>
+<script id="template" type="x-template">
+    <div>
+        <label style="width:80px;display:inline-block;">add:</label>
+        <el-input v-model="num1" style="width:200px;"/>
+        <el-input v-model="num2" style="width:200px;"/>
+        <span> {{result1}}</span>
+    </div>
+    <div>
+        <label style="width:80px;display:inline-block;">subtract:</label>
+        <el-input v-model="num3" style="width:200px;"/>
+        <el-input v-model="num4"  style="width:200px;"/>
+        <span> {{result2}}</span>
+    </div>
+    <div>
+        <label style="width:80px;display:inline-block;">multiply:</label>
+        <el-input v-model="num5" style="width:200px;"/>
+        <el-input v-model="num6"  style="width:200px;"/>
+        <span> {{result3}}</span>
+    </div>
+    <div>
+        <label style="width:80px;display:inline-block;">divide:</label>
+        <el-input v-model="num7" style="width:200px;"/>
+        <el-input v-model="num8"  style="width:200px;"/>
+        <span> {{result4}}</span>
+    </div>
+    <div>
+        <label style="width:80px;display:inline-block;">{{rule}}:</label>
+        <el-input v-model="num9" style="width:200px;"/>
+        <el-select v-model="rule" style="width:100px;">
+            <el-option v-for="item in ruleList" :key="item.value" :label="item.label" :value="item.value"/>
+        </el-select>
+        <el-input v-model="num10"  style="width:200px;"/>
+        <span> {{result5}}</span>
+    </div>
+</script>
+<script>
+    const { createApp, defineComponent, reactive, toRefs, onMounted, computed } = Vue;
+    const App = defineComponent({
+        name:'App',
+        template:"#template",
+        setup(){
+            const state = reactive({
+                num1:'',
+                num2:'',
+                num3:'',
+                num4:'',
+                num5:'',
+                num6:'',
+                num7:'',
+                num8:'',
+                num9:'',
+                num10:'',
+                ruleList:[
+                    {label:'＋',value:'add'},
+                    {label:'－',value:'subtract'},
+                    {label:'×',value:'multiply'},
+                    {label:'÷',value:'divide'}
+                ],
+                rule:'add'
+            })
+            //➕
+            const add = (...arg) => {
+                let s = 0;
+                for(let i=0,argLen=arg.length;i<argLen;i++){
+                    s = math.format(math.chain(math.bignumber(s)).add(math.bignumber(arg[i])).done())
+                }
+                return Number(s)
+            }
+            //➖
+            const subtract = (...arg) => {
+                let d = arg[0]
+                for(let i=0,argLen=arg.length-1;i<argLen;i++){
+                    d = math.format(math.chain(math.bignumber(d)).subtract(math.bignumber(arg[i+1])).done())
+                }
+                return Number(d)
+            }
+            //✖
+            const multiply = (...arg) => {
+                let p = 1;
+                for(let i=0,argLen=arg.length;i<argLen;i++){
+                    p = math.format(math.chain(math.bignumber(p)).multiply(math.bignumber(arg[i])).done())
+                }
+                return Number(p)
+            }
+            //➗
+            const divide = (...arg) => {
+                let c = arg[0]
+                for(let i=0,argLen=arg.length-1;i<argLen;i++){
+                    c = math.format(math.chain(math.bignumber(c)).divide(math.bignumber(arg[i+1])).done())
+                }
+                return Number(c)
+            }
+            //result
+            const result1 = computed(()=>{if(state.num1&&state.num2)return add(state.num1,state.num2)})
+            const result2 = computed(()=>{if(state.num3&&state.num4)return subtract(state.num3,state.num4)})
+            const result3 = computed(()=>{if(state.num5&&state.num6)return multiply(state.num5,state.num6)})
+            const result4 = computed(()=>{if(state.num7&&state.num8)return divide(state.num7,state.num8)})
+            const result5 = computed(()=>{if(state.num9&&state.num10)return eval(`${state.rule}(state.num9,state.num10)`)})
+
+            const mathjsDemo = () =>{
+                //0.1＋0.2
+                let add = math.format(math.chain(math.bignumber(0.1)).add(math.bignumber(0.2)).done());
+                //0.2-0.1
+                let subtract = math.format(math.chain(math.bignumber(0.2)).subtract(math.bignumber(0.1)).done());
+                //0.1*0.2
+                let multiply = math.format(math.chain(math.bignumber(0.1)).multiply(math.bignumber(0.2)).done());
+                //0.1/0.2
+                let divide = math.format(math.chain(math.bignumber(0.1)).divide(math.bignumber(0.2)).done());
+                console.info('add',add)
+                console.info('subtract',subtract)
+                console.info('multiply',multiply)
+                console.info('divide',divide)
+            }
+            onMounted(()=>{
+                mathjsDemo()
+                // console.info(add(0.1,0.2,0.3))
+                // console.info(subtract(0.1,0.2,0.3))
+                // console.info(multiply(0.28,100,0.1))
+                // console.info(divide(0.28,0.01,0.2))
+            })
+            return {
+                ...toRefs(state),
+                add,
+                subtract,
+                multiply,
+                divide,
+                result1,
+                result2,
+                result3,
+                result4,
+                result5
+            }
+        },
+    })
+    const app = createApp(App)
+    app.use(ElementPlus).mount("#app")
+</script>
