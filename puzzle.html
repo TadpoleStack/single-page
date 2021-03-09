@@ -1,0 +1,195 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>puzzle</title>
+    <style>
+      * {
+        padding: 0;
+        margin: 0;
+      }
+      html,
+      body,
+      #app {
+        width: 100%;
+        height: 100%;
+      }
+      #box {
+        margin: 100px;
+        width: 300px;
+        height: 300px;
+        /* border: 1px solid rgba(0, 0, 0, 0.3); */
+      }
+    </style>
+    <link
+      rel="stylesheet"
+      href="https://unpkg.com/element-plus/lib/theme-chalk/index.css"
+    />
+    <script src="https://cdn.bootcdn.net/ajax/libs/vue/3.0.2/vue.global.js"></script>
+    <script src="https://cdn.bootcdn.net/ajax/libs/vuex/4.0.0-rc.1/vuex.global.js"></script>
+    <script src="https://unpkg.com/element-plus/lib/index.full.js"></script>
+  </head>
+  <body>
+    <div id="app"></div>
+  </body>
+</html>
+<script id="template" type="x-template">
+  <input type="file" id="file" @change="changefile('#file')">
+  <div id="box"></div>
+</script>
+<script>
+  const {
+    createApp,
+    defineComponent,
+    reactive,
+    toRefs,
+    onMounted,
+    computed,
+  } = Vue;
+  const App = defineComponent({
+    name: "App",
+    template: "#template",
+    setup() {
+      const state = reactive({});
+
+      const puzzleStart = config => {
+        let box = document.querySelector(config.selector);
+        let canvas = document.createElement("canvas");
+        box.appendChild(canvas);
+        let width = 0;
+        let height = 0;
+        let ctx = canvas.getContext("2d");
+        let cellW = 0;
+        let cellY = 0;
+        let grid = [3,3]
+        let img = ''
+        let mapChart = {
+            1:[1,1],
+            2:[1,2]
+        }
+        let mapData = []
+
+        //获取DOM对象属性
+        const getStyle = (obj, att) =>
+          obj.currentStyle
+            ? obj.currentStyle[att]
+            : window.getComputedStyle(obj, false)[att];
+        //初始化
+        const init = () => {
+          //设置canvas宽高与box相等
+          width = Number(getStyle(box, "width").replace("px", ""));
+          height = Number(getStyle(box, "height").replace("px", ""));
+          canvas.width = width;
+          canvas.height = height;
+          grid = config.grid||[3,3]
+          mapData = [];
+          let imgDom = document.createElement('img');
+          imgDom.src = config.url;
+          imgDom.onload = function(){
+              img = this;
+              computed();
+              draw();
+              setTimeout(()=>{
+                let confirm = window.confirm('start?')
+                if(confirm){
+                    play()
+                }
+              },1000)
+          }
+        };
+        //计算
+        const computed = () => {
+            cellW = width/grid[0];
+            cellY = height/grid[1];
+            for(let i=0,LenY=grid[1];i<LenY;i++){
+                let row = [];
+                for(let k=0,LenX=grid[0];k<LenX;k++){
+                    row.push(k+1+i*LenX);
+                    mapChart[k+1+i*LenX] = [i,k]
+                }
+                mapData.push(row);
+            }
+        }
+        //渲染
+        const draw = () => {
+            console.info(mapChart)
+            console.info(mapData)
+            ctx.clearRect(0,0,width,height)
+            for(let i=0,LenY=mapData.length;i<LenY;i++){
+                let row = mapData[i]
+                for(let k=0,LenX=row.length;k<LenX;k++){
+                    let cellData = row[k]
+                    // let [x,y] = mapChart[cellData]
+                    if(cellData!==0){
+                        let [x,y] = mapChart[cellData]
+                        console.info(x,y)
+                        ctx.drawImage(img,x*cellW,y*cellY,cellW,cellY,x*cellW,y*cellY,cellW,cellY)
+                    }else{
+                        // ctx.clearRect(k*cellW,i*cellY,cellW,cellY)
+                    }
+                }
+            }
+        }
+        //乱序
+        const derangement = () => {
+            let arr = []
+            let newArr = []
+            let tempArr = []
+            for(let i=0;i<grid[0]*grid[1];i++){
+                arr.push(i+1)
+            }
+            for(let i = 0,Len = arr.length; i < Len;){
+                i++;
+                let currentRandom = parseInt(Math.random() * Len);
+                if (!newArr.includes(arr[currentRandom])){
+                    newArr.push(arr[currentRandom]);
+                }else{
+                    i--;
+                }
+            }
+            for(let i=0,LenY=grid[1];i<LenY;i++){
+                let row = [];
+                for(let k=0,LenX=grid[0];k<LenX;k++){
+                    row.push(newArr[k+i*LenX]);
+                }
+                tempArr.push(row);
+            }
+            return tempArr
+        }
+        //开始
+        const play = () => {
+            let newMapData = derangement();
+            newMapData[grid[0]-1][grid[1]-1]=0;
+            mapData = newMapData;
+            draw();
+            canvas.addEventListener('click',e=>{
+                let X = e.clientX - canvas.offsetLeft;
+                let Y = e.clientY - canvas.offsetTop;
+                console.info(X,Y)
+            })
+        }
+        init();
+        // computed();
+        // draw();
+      };
+      
+      const changefile = (d) => {
+        d = document.querySelector(d);
+        let url = window.URL.createObjectURL(d.files[0]);
+        puzzleStart({
+          url: url,
+          selector: "#box",
+          grid:[3,3]
+        });
+      };
+      return {
+        ...toRefs(state),
+        changefile,
+      };
+    },
+  });
+  const app = createApp(App);
+  app.use(ElementPlus).mount("#app");
+</script>

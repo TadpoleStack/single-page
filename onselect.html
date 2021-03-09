@@ -1,0 +1,17 @@
+<script>
+    //解决网页无法选中
+    let EL = ['onselectstart','onselectmove'];//eventList
+    let TNL = ['html','body','document','div','span','ul','ol','li','p','a','h1','h2','h3','h4','h5','h6'];//tagNameList
+    let DL = [document];//domList
+    let style = document.createElement('style')
+    style.id="selectStyle"    
+    document.body.appendChild(style)
+    document.getElementById('selectStyle').innerText='*{-webkit-user-select:auto!important;-moz-user-select:auto!important;-ms-user-select:auto!important;user-select:auto!important;}'
+    TNL.forEach(v=>{DL.push(...document.querySelectorAll(v))});
+    for(let i=0,eLen=EL.length;i<eLen;i++){
+        for(let k=0,dLen=DL.length;k<dLen;k++){
+            DL[k][EL[i]]=function(){return true}
+        }
+    };
+    console.clear();console.info('finish!')
+</script>

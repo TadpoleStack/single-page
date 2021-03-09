@@ -71,6 +71,8 @@
         let errLine = [];
         let heightPointer = [];
         let startX = 25;
+        let cellW = 1;
+        let gridR = 70;
         //初始化
         const init = () => {
           height = 0;
@@ -81,6 +83,7 @@
           canvas.width = width;
           data = config.data;
           errLine = config.errLine;
+          if (config.gridR != undefined) gridR = config.gridR;
         };
         //计算
         const computed = () => {
@@ -97,6 +100,7 @@
           height += 20;
           canvas.height = height;
           box.style.height = height + "px";
+          cellW = (width - gridR) / 300;
         };
         //画图
         const draw = () => {
@@ -104,11 +108,20 @@
           for (let i = 0, dataLen = data.length; i < dataLen; i++) {
             let moudelItem = data[i];
             ctx.textBaseline = "bottom";
-            ctx.fillText(config.itemText[i]?config.itemText[i]:'', 0, heightPointer[count] - 10);
+            ctx.fillText(
+              config.itemText[i] ? config.itemText[i] : "",
+              0,
+              heightPointer[count] - 10
+            );
             for (let k = 0, itemLen = moudelItem.length; k < itemLen; k++) {
               let item = moudelItem[k];
               ctx.fillStyle = "rgb(187,206,225)";
-              ctx.fillRect(startX, heightPointer[count], item, itemHeight);
+              ctx.fillRect(
+                startX,
+                heightPointer[count],
+                item * cellW,
+                itemHeight
+              );
               ctx.fillStyle = "rgb(0,0,0)";
               ctx.textBaseline = "top";
               ctx.textAlign = "left";
@@ -124,18 +137,18 @@
           for (let i = 0, errLineLen = errLine.length; i < errLineLen; i++) {
             let errItem = errLine[i];
             ctx.moveTo(
-              startX + errItem.value - 0.5,
+              startX + errItem.value * cellW - 0.5,
               heightPointer[0] - interval
             );
             ctx.lineTo(
-              startX + errItem.value - 0.5,
+              startX + errItem.value * cellW - 0.5,
               heightPointer[heightPointer.length - 1] + itemHeight + interval
             );
             ctx.textBaseline = "middle";
             ctx.textAlign = "center";
             ctx.fillText(
               errItem.text,
-              startX + errItem.value,
+              startX + errItem.value * cellW,
               errItem.place === "top"
                 ? heightPointer[0] - interval - 5
                 : heightPointer[heightPointer.length - 1] +
