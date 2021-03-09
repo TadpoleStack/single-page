@@ -131,20 +131,37 @@
                     angleCount += data[i].value*Math.PI*2/sum
                 }
                 ctx.beginPath();
-                if(i==0){
-                    ctx.moveTo(...originPoint)
-                    ctx.lineTo(originPoint[0]+radius,originPoint[1])
-                }
+                // if(i==0){
+                //     ctx.moveTo(...originPoint)
+                //     ctx.lineTo(originPoint[0]+radius,originPoint[1])
+                // }
                 ctx.arc(...originPoint,radius,angleStart,angleEnd,false);
                 ctx.lineTo(...originPoint);
+                ctx.strokeStyle = data[i].color;
                 ctx.stroke();
-                // ctx.fillStyle = data[i].color;
-                // ctx.fill();
+                ctx.fillStyle = data[i].color;
+                ctx.fill();
             }
         }
         init();
         computed();
         draw();
+        return {
+            update:function(updateConfig){
+                config = Object.assign(config, updateConfig);
+                ctx.clearRect(0, 0, width, height);
+                init();
+                computed();
+                draw();
+            },
+            resize:function(){
+                ctx.clearRect(0, 0, width, height);
+                init();
+                computed();
+                draw();
+            },
+            ctx:ctx
+        }
       };
       onMounted(() => {
         let data = [
